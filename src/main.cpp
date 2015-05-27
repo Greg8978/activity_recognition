@@ -4,6 +4,7 @@
 #include <toaster_msgs/Fact.h>
 #include <toaster_msgs/FactList.h>
 #include "toaster_msgs/GetFacts.h"
+#include "toaster_msgs/GetFactValue.h"
 #include "toaster_msgs/AddFact.h"
 #include <iterator>
 
@@ -13,7 +14,8 @@ int main(int argc, char** argv) {
     ros::NodeHandle node;
 
     //Services clients
-    ros::ServiceClient getFactsClient = node.serviceClient<toaster_msgs::GetFacts>("/belief_manager/get_fact_value", true);
+    ros::ServiceClient getFactsClient = node.serviceClient<toaster_msgs::GetFacts>("/belief_manager/get_facts", true);
+    ros::ServiceClient getFactValueClient = node.serviceClient<toaster_msgs::GetFactValue>("/belief_manager/get_fact_value", true);
 
     //Services servers
 
@@ -40,7 +42,6 @@ int main(int argc, char** argv) {
         toaster_msgs::GetFacts getFactsVending;
         toaster_msgs::GetFacts getFactsTouristic;
 
-
         getFactsMonitor.request.reqFact.property = property;
         getFactsMonitor.request.reqFact.subProperty = monitor;
 
@@ -54,58 +55,101 @@ int main(int argc, char** argv) {
             for (std::vector<toaster_msgs::Fact>::iterator it = getFactsMonitor.response.resFactList.factList.begin();
                     it != getFactsMonitor.response.resFactList.factList.end(); ++it) {
 
-                // Fact watching monitor
-                fact_msg.property = "IsWatchingMonitor";
-                fact_msg.propertyType = "activity";
-                //fact_msg.subProperty = ;
-                fact_msg.subjectId = (*it).subjectId;
-                fact_msg.subjectName = (*it).subjectName;
-                fact_msg.targetName = (*it).targetName;
-                fact_msg.targetId = (*it).subjectId;
-                fact_msg.confidence = (*it).confidence;
-                //fact_msg.doubleValue = angleResult;
-                //fact_msg.valueType = 1;
-                fact_msg.factObservability = 0.5;
-                fact_msg.time = (*it).time;
 
-                factList_msg.factList.push_back(fact_msg);
+                //To watch tv, it requires that the human is not moving.
+                //TODO: make something smarter?
+                toaster_msgs::GetFactValue getFactV;
+
+                getFactV.request.reqFact.property = "IsMoving";
+                getFactV.request.reqFact.subjectId = (*it).subjectId;
+
+                if (getFactValueClient.call(getFactV)) {
+                    if (!getFactV.response.boolAnswer) {
+
+                        //human is not moving, but is he watching tv?
+
+                        getFactV.request.reqFact.property = "IsFacing";
+                        getFactV.request.reqFact.subjectId = (*it).subjectId;
+                        getFactV.request.reqFact.targetId = (*it).ownerId;
+
+                        if (getFactValueClient.call(getFactV)) {
+                            if (getFactV.response.boolAnswer) {
+                                //human is facing monitor
 
 
+                                // Fact watching monitor
+                                fact_msg.property = "IsWatchingMonitor";
+                                fact_msg.propertyType = "activity";
+                                //fact_msg.subProperty = ;
+                                fact_msg.subjectId = (*it).subjectId;
+                                fact_msg.subjectName = (*it).subjectName;
+                                fact_msg.targetName = (*it).targetName;
+                                fact_msg.targetId = (*it).subjectId;
+                                fact_msg.confidence = (*it).confidence;
+                                //fact_msg.doubleValue = angleResult;
+                                //fact_msg.valueType = 1;
+                                fact_msg.factObservability = 0.5;
+                                fact_msg.time = (*it).time;
+
+                                factList_msg.factList.push_back(fact_msg);
+                            }
+                        }
+                    }
+                }
             }
-
-
         }
-
 
         if (getFactsClient.call(getFactsVending)) {
-for (std::vector<toaster_msgs::Fact>::iterator it = getFactsMonitor.response.resFactList.factList.begin();
+            for (std::vector<toaster_msgs::Fact>::iterator it = getFactsMonitor.response.resFactList.factList.begin();
                     it != getFactsMonitor.response.resFactList.factList.end(); ++it) {
+                //To buy, it requires that the human is not moving.
+                //TODO: make something smarter?
+                toaster_msgs::GetFactValue getFactV;
 
-                // Fact vending machine
-                fact_msg.property = "IsUsingVendingMachine";
-                fact_msg.propertyType = "activity";
-                //fact_msg.subProperty = ;
-                fact_msg.subjectId = (*it).subjectId;
-                fact_msg.subjectName = (*it).subjectName;
-                fact_msg.targetName = (*it).targetName;
-                fact_msg.targetId = (*it).subjectId;
-                fact_msg.confidence = (*it).confidence;
-                //fact_msg.doubleValue = angleResult;
-                //fact_msg.valueType = 1;
-                fact_msg.factObservability = 0.5;
-                fact_msg.time = (*it).time;
+                getFactV.request.reqFact.property = "IsMoving";
+                getFactV.request.reqFact.subjectId = (*it).subjectId;
 
-                factList_msg.factList.push_back(fact_msg);
+                if (getFactValueClient.call(getFactV)) {
+                    if (!getFactV.response.boolAnswer) {
+
+                        //human is not moving, but is he facing the vending machine?
+
+                        getFactV.request.reqFact.property = "IsFacing";
+                        getFactV.request.reqFact.subjectId = (*it).subjectId;
+                        getFactV.request.reqFact.targetId = (*it).ownerId;
+
+                        if (getFactValueClient.call(getFactV)) {
+                            if (getFactV.response.boolAnswer) {
+                                //human is facing vending machine
 
 
+                                // Fact vending machine
+                                fact_msg.property = "IsUsingVendingMachine";
+                                fact_msg.propertyType = "activity";
+                                //fact_msg.subProperty = ;
+                                fact_msg.subjectId = (*it).subjectId;
+                                fact_msg.subjectName = (*it).subjectName;
+                                fact_msg.targetName = (*it).targetName;
+                                fact_msg.targetId = (*it).subjectId;
+                                fact_msg.confidence = (*it).confidence;
+                                //fact_msg.doubleValue = angleResult;
+                                //fact_msg.valueType = 1;
+                                fact_msg.factObservability = 0.5;
+                                fact_msg.time = (*it).time;
+
+                                factList_msg.factList.push_back(fact_msg);
+
+                            }
+                        }
+                    }
+                }
             }
-
-
         }
+
 
 
         if (getFactsClient.call(getFactsTouristic)) {
-for (std::vector<toaster_msgs::Fact>::iterator it = getFactsMonitor.response.resFactList.factList.begin();
+            for (std::vector<toaster_msgs::Fact>::iterator it = getFactsMonitor.response.resFactList.factList.begin();
                     it != getFactsMonitor.response.resFactList.factList.end(); ++it) {
 
                 // Fact watching monitor
@@ -124,18 +168,11 @@ for (std::vector<toaster_msgs::Fact>::iterator it = getFactsMonitor.response.res
 
                 factList_msg.factList.push_back(fact_msg);
 
-
             }
-
-
         }
-
-
         fact_pub.publish(factList_msg);
 
         ros::spinOnce();
         loop_rate.sleep();
     }
-
 }
-
