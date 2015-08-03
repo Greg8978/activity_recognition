@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
 
                         getFactV.request.reqFact.property = "IsFacing";
                         getFactV.request.reqFact.subjectId = (*it).subjectId;
-                        getFactV.request.reqFact.targetId = (*it).ownerId;
+                        getFactV.request.reqFact.targetId = (*it).subjectOwnerId;
 
                         if (getFactValueClient.call(getFactV)) {
                             if (getFactV.response.boolAnswer) {
@@ -82,8 +82,6 @@ int main(int argc, char** argv) {
                                 fact_msg.propertyType = "activity";
                                 //fact_msg.subProperty = ;
                                 fact_msg.subjectId = (*it).subjectId;
-                                fact_msg.subjectName = (*it).subjectName;
-                                fact_msg.targetName = (*it).targetName;
                                 fact_msg.targetId = (*it).subjectId;
                                 fact_msg.confidence = (*it).confidence;
                                 //fact_msg.doubleValue = angleResult;
@@ -116,7 +114,7 @@ int main(int argc, char** argv) {
 
                         getFactV.request.reqFact.property = "IsFacing";
                         getFactV.request.reqFact.subjectId = (*it).subjectId;
-                        getFactV.request.reqFact.targetId = (*it).ownerId;
+                        getFactV.request.reqFact.targetId = (*it).subjectOwnerId;
 
                         if (getFactValueClient.call(getFactV)) {
                             if (getFactV.response.boolAnswer) {
@@ -128,8 +126,6 @@ int main(int argc, char** argv) {
                                 fact_msg.propertyType = "activity";
                                 //fact_msg.subProperty = ;
                                 fact_msg.subjectId = (*it).subjectId;
-                                fact_msg.subjectName = (*it).subjectName;
-                                fact_msg.targetName = (*it).targetName;
                                 fact_msg.targetId = (*it).subjectId;
                                 fact_msg.confidence = (*it).confidence;
                                 //fact_msg.doubleValue = angleResult;
@@ -157,8 +153,6 @@ int main(int argc, char** argv) {
                 fact_msg.propertyType = "activity";
                 //fact_msg.subProperty = ;
                 fact_msg.subjectId = (*it).subjectId;
-                fact_msg.subjectName = (*it).subjectName;
-                fact_msg.targetName = (*it).targetName;
                 fact_msg.targetId = (*it).subjectId;
                 fact_msg.confidence = (*it).confidence;
                 //fact_msg.doubleValue = angleResult;
